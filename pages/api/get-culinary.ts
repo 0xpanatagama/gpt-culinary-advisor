@@ -3,12 +3,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 
 type Data = {
   message: string,
-  pointsOfInterestPrompt: any,
-  itinerary: any,
-}
-
-type Error = {
-  message: string,
+  pointsOfInterestPrompt: string,
+  culinary: string,
 }
 
 const GPT_KEY = process.env.GPT_API_KEY
@@ -20,7 +16,7 @@ const headers = {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data | Error>
+  res: NextApiResponse<Data>
 ) {
   let days = 4, city = 'Rio'
   if (req.body) {
@@ -29,17 +25,11 @@ export default async function handler(
     city = body.city
   }
 
-  const parts = city.split(' ')
-
-  if (parts.length > 5) {
-    throw new Error('please reduce size of request')
-  }
-  
   if (days > 10) {
     days = 10
   }
 
-  let basePrompt = `what is an ideal itinerary for ${days} days in ${city}?`
+  let basePrompt = `Imagine you're planning a food-filled culinary adventure in ${city} for ${days} days. Where would you go for a delicious and memorable culinary experience on each of these days?`
   try {
     const response = await fetch('https://api.openai.com/v1/completions', {
       method: 'POST',
@@ -51,15 +41,24 @@ export default async function handler(
         max_tokens: 550
       })
     })
-    const itinerary = await response.json()
-    const pointsOfInterestPrompt = 'Extract the points of interest out of this text, with no additional words, separated by commas: ' + itinerary.choices[0].text
+
+    if (!response.ok) {
+      throw new Error(`Unexpected response from OpenAI API: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('No valid response from OpenAI API')
+    }
+
+    const culinary = data.choices[0].text
+    const pointsOfInterestPrompt = 'Extract the points of interest out of this text, identify and list down the unique culinary places mentioned in the text, with no additional words, separated by commas: ' + culinary
 
     res.status(200).json({
       message: 'success',
       pointsOfInterestPrompt,
-      itinerary: itinerary.choices[0].text
+      culinary
     })
-
   } catch (err) {
     console.log('error: ', err)
   }
