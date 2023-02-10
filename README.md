@@ -1,4 +1,4 @@
-# GPT Travel advisor
+# GPT Culinary advisor
 
 ### Requirements
 
@@ -15,7 +15,7 @@ GPT_API_KEY=open-ai-api-GPT_API_KEY
 1. Clone the repo
 
 ```sh
-git clone git@github.com:dabit3/gpt-travel-advisor.git
+https://github.com/0xpanatagama/gpt-culinary-advisor.git
 ```
 
 2. Install the dependencies
